@@ -49,6 +49,7 @@ class SalesmanPanel
       saler_options
     when 4
       sold_product_list
+      sold_product_add_admin_items
       saler_options
     when 5
       LogoutExit.new.logout
@@ -85,8 +86,14 @@ class SalesmanPanel
         })
 
     if p_name != '' && p_price != '' && p_qty != ''
-      puts "\n=> Product added successfully. To see the product details see 'List of Products'...\n"
-      saler_options
+      puts "\n=> Product added successfully. You may see changes in '|List of Products|'..!!\n"
+      case $user_role
+      when 'admin'
+        AdminPanel.new.salesman_panel
+      when 'salesman'
+        saler_options
+      end
+
     else
       puts "Product details should not be empty. Try again!\n"
       saler_add_items
@@ -105,6 +112,7 @@ class SalesmanPanel
         print "#{sell[:p_qty]}"
         puts "\n"
       end
+
     else
       puts 'Sorry, No products available!! Please add firstly..'
       saler_options
@@ -142,9 +150,15 @@ class SalesmanPanel
           })
 
           sold_product_list
+          # sold_product_add_admin_items
           puts "\nSelling Bill Amount:- #{$sellamount}".light_yellow
           puts 'Sold Product Successfully!!!'.light_blue
-          saler_options
+          case $user_role
+          when 'admin'
+            AdminPanel.new.salesman_panel
+          when 'salesman'
+            saler_options
+          end
         end 
       end
 
@@ -170,7 +184,7 @@ class SalesmanPanel
       puts '---------------------------'
       puts "\n Sold_id\tSold_P_id\tSold_P_Name\tSold_P_Price\tLeft_Qty\tSold_P_Qty \n"
       $sold_products.each do |sell|
-        print "\t#{sell[:sold_id]}\t\t"
+        print " \s#{sell[:sold_id]}\t\t"
         print " #{sell[:sold_p_id]}\t\t"
         print "#{sell[:sold_p_name]}\t\t"
         print "#{sell[:sold_p_price]}\t\t"
@@ -178,12 +192,24 @@ class SalesmanPanel
         print "#{sell[:sold_p_qty]}"
         puts "\n"
       end
+
     else
       puts 'Sorry, No product sold yet!!! Sell something firstly...'
     end
   end
 
-  # def check_selling_qty
-
-  # end
+  def sold_product_add_admin_items
+    $sold_products.each do |sell|
+      if $products.any? { |product| product[:p_name] != sell[:sold_p_name]}
+        $p_id += 1
+        $products.push ({
+            p_id: $p_id,
+            p_name: sell[:sold_p_name],
+            p_price: sell[:sold_p_price],
+            p_qty: sell[:sold_p_qty]
+            })
+      end
+    end
+    # byebug
+  end
 end

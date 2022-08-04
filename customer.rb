@@ -41,6 +41,7 @@ class CustomerPanel
     case cust_opt
     when 1
       p_list
+      customer_options
     when 2
       select_items
     when 3
@@ -71,7 +72,6 @@ class CustomerPanel
         print "#{key[:p_qty]}"
         puts "\n"
       end
-      customer_options
     else
       puts 'Sorry, No products available!!!'
       customer_options
@@ -84,6 +84,7 @@ class CustomerPanel
   $b_id = 0
   def select_items
     if $p_id != 0
+      p_list
       puts "\nSelect products from the <List of Product>:- "
       print 'Enter Product id, which you want to purchase: '
       buy_id = gets.chomp.to_i
@@ -99,7 +100,6 @@ class CustomerPanel
             key[:p_qty] -= need_qty
 
             $b_id += 1
-
             $purchase.push({
               b_id: $b_id,
               buy_p_id: key[:p_id],
@@ -121,7 +121,6 @@ class CustomerPanel
 
           if $total != 0
             puts " P_id\t\tP_Name\t\tP_Price\t\tBuy_Qty \n"
-
             print " #{key[:p_id]}\t\t"
             print "#{key[:p_name]}\t\t"
             print "#{key[:p_price]}\t\t"
@@ -130,7 +129,6 @@ class CustomerPanel
           end
           
           print "\n=> Current Bill: #{bill}\n\n".light_green.bold
-          
           print "=> Your Total Bill: #{$total}\n\n".light_green.bold
           
           print 'Do you want to select more items(y/n): '
@@ -141,7 +139,12 @@ class CustomerPanel
 
           elsif item_choice.downcase == 'n'
             puts '**Thank You!!! Come again to Purchase.**'.yellow.bold
-            customer_options
+            case $user_role
+            when 'admin'
+              AdminPanel.new.customer_panel
+            when 'customer'
+              customer_options
+            end
 
           else
             puts 'You entered something wrong. Please enter (y/n)!!!'
@@ -197,12 +200,16 @@ class CustomerPanel
           puts "\n=> Your Latest Bill:-\n".light_green.bold
           new_bill = b[:buy_p_price] * return_qty
           $total -= new_bill
-          # key[:p_qty] += return_qty
           b[:buy_qty] -= return_qty
           find_product(return_id, return_qty)
 
           print "\nAfter returning the #{return_qty} qty. of #{b[:buy_p_name]}, Your Total Bill: #{$total}\n\n".light_green.bold
-          customer_options
+          case $user_role
+          when 'admin'
+            AdminPanel.new.customer_panel
+          when 'customer'
+            customer_options
+          end
         end
       end
         
