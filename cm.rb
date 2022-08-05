@@ -25,7 +25,7 @@ class SignLogin
     if user_id == 'abc' && pswd == 123
     	case $user_role
 	  	when 'shopper'
-	  		$user1[:u_id] = 0
+	  		$user1[:u_id] = $u_id
 	  		$user1[:sp_id] = 1
 	      $user1[:user_id] = user_id
 	      $user1[:pswd]	= pswd
@@ -132,47 +132,33 @@ end
 class Users
 	def users_exist
     if $u_id != 0 
-      puts "LIST OF EXIST USERS:-\n"
-
+      puts "LIST OF EXIST USERS:-\n".light_blue.bold
+      byebug
       if $sp_id != 0
-      	byebug
-	      puts "Shopper Details:-\n".bold
-	      puts " U.id.\tSp.id.\tEmail_id\tPassword \n"
-	      print " #{$user1[:u_id]}\t\t"
-		  	print	"#{$user1[:sp_id]}\t\t"
-		    print "#{$user1[:user_id]}\t\t"
-		    print "#{$user1[:pswd]} \n"
+	      table = Terminal::Table.new title: 'Shopper Details'.bold, headings: ['U.id.','Sp.id.','Email_id','Password'], rows: [$user1.values], style: {:alignment => :center}
+	      byebug
+	      puts table
 		  end
 
 		  if $c_id != 0
-		  	byebug
-		    puts "\nCustomer Details:-\n".bold
-	      puts " U.id.\tC.id.\tEmail_id\tPassword \n"
-	      $user2.each do |user|
-	      	print " #{user[:u_id]}\t\t"
-	      	print "#{user[:c_id]}\t\t"
-	      	print "#{user[:user_id]}\t\t"
-	      	print "#{user[:pswd]}"
-	      	puts "\n"
+		  	table = Terminal::Table.new title: 'Customer Details'.bold do |t|
+		      t.headings = ['U.id.', 'C.id.', 'Email_id', 'Password']
+		      t.rows = $user2.map { |user| user.values }
+		      t.style = {:alignment => :center}
 	      end
+	      puts table
 	    end
 
 	    if $s_id != 0
-	    	byebug
-	    	puts "\nSalesman Details:-\n".bold
-	      puts " U.id.\tS.id.\tEmail_id\tPassword \n"
-	      $user3.each do |user|
-	      	print " #{user[:u_id]}\t\t"
-	      	print "#{user[:s_id]}\t\t"
-	      	print "#{user[:user_id]}\t\t"
-	      	print "#{user[:pswd]}"
-	      	puts "\n"
+	    	table = Terminal::Table.new title: 'Salesman Details'.bold do |t|
+		      t.headings = ['U.id.', 'S.id.', 'Email_id', 'Password']
+		      t.rows = $user3.map { |user| user.values }
+		      t.style = {:alignment => :center}
 	      end
+	      puts table
 	    end
-    
     else
       puts "No users sign-up yet!!!\n"
-      AdminPanel.new.admin_options
     end
   end
 end
@@ -263,6 +249,4 @@ class PanelExit
     end
 	end
 end
-
-
 

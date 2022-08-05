@@ -1,16 +1,14 @@
-require "io/console"
 require "byebug"
+require_relative "cm.rb"
+require 'terminal-table'
 
 class SalesmanPanel
-
 	def saler_panel
 		puts "\t\t\t\t ************************************** "
   	puts "\t\t\t\t\t || #{'SALESMAN PANEL'.light_red.bold} || "
     puts "\t\t\t\t ************************************** "
-
     puts "\nSalesman Options:-"
     puts " 1. SignUp \n 2. Login \n 3. Back \n 4. Exit "
-
     print 'Select option: '
     saler_choice = gets.chomp.to_i
     case saler_choice
@@ -29,12 +27,10 @@ class SalesmanPanel
     end
   end
 
-
   def saler_options
     puts "\n-------------------------------------"
     puts "\t Salesman Options ".light_yellow.bold
     puts "-------------------------------------\n"
-
     puts "\n 1. Add Items \n 2. List of Products \n 3. Sell Products \n 4. List of Sold Products \n 5. Logout \n 6. Back \n 7. Exit "
     print 'Select option: '
     saler_opt = gets.chomp.to_i
@@ -49,7 +45,6 @@ class SalesmanPanel
       saler_options
     when 4
       sold_product_list
-      sold_product_add_admin_items
       saler_options
     when 5
       LogoutExit.new.logout
@@ -77,42 +72,44 @@ class SalesmanPanel
     p_price = gets.chomp.to_i
     print 'Enter Product Quantity: '
     p_qty = gets.chomp.to_i
+
+    if $saler_products.any? { |prod| prod[:p_name] == p_name }
+      $products.each do |prod|
+        puts '**Product Found**'.light_blue.bold
+        prod[:p_qty] += p_qty
+        $sp_id -= 1
+        puts 'Product Quantity added successfully!'
+        next_step
+      end
     
-    $saler_products.push({
+    else
+      $saler_products.push({
         sp_id: $sp_id,
         p_name: p_name,
         p_price: p_price,
         p_qty: p_qty
         })
 
-    if p_name != '' && p_price != '' && p_qty != ''
-      puts "\n=> Product added successfully. You may see changes in '|List of Products|'..!!\n"
-      case $user_role
-      when 'admin'
-        AdminPanel.new.salesman_panel
-      when 'salesman'
-        saler_options
+      if p_name != '' && p_price != '' && p_qty != ''
+        puts "\n=> Product added successfully. You may see changes in '|List of Products|'..!!\n"
+        next_step
+      else
+        puts "Product details should not be empty. Try again!\n"
+        saler_add_items
       end
-
-    else
-      puts "Product details should not be empty. Try again!\n"
-      saler_add_items
     end
   end
 
   def saler_product_list
     if $sp_id != 0 
       puts "\n|| LIST OF PRODUCTS ||"
-      puts '----------------------'
-      puts "\n SP_id\t\tP_Name\t\tP_Price\t\tP_Qty \n"
-      $saler_products.each do |sell|
-        print " #{sell[:sp_id]}\t\t"
-        print "#{sell[:p_name]}\t\t"
-        print "#{sell[:p_price]}\t\t"
-        print "#{sell[:p_qty]}"
-        puts "\n"
+      puts "----------------------\n"
+      table = Terminal::Table.new do |t|
+        t.headings = ['SP_id', 'P_Name', 'P_Price', 'P_Qty']
+        t.rows = $saler_products.map { |sell| sell.values}
+        t.style = { :alignment => :center }
       end
-
+      puts table
     else
       puts 'Sorry, No products available!! Please add firstly..'
       saler_options
@@ -125,7 +122,6 @@ class SalesmanPanel
   def sell_product
     unless $sp_id.zero?
       saler_product_list
-
       print "\nEnter Product id, Which you want to sell: "
       sell_id = gets.chomp.to_i
       print 'Enter Quantity: '
@@ -139,26 +135,26 @@ class SalesmanPanel
           sell[:p_qty] -= sell_qty
 
           $sold_id += 1
-
           $sold_products.push ({
             sold_id: $sold_id,
             sold_p_id: sell[:sp_id],
             sold_p_name: sell[:p_name],
             sold_p_price: sell[:p_price],
             left_qty: sell[:p_qty],
-            sold_p_qty: sell_qty
+            sold_p_qty: sell_qty  
           })
 
           sold_product_list
-          # sold_product_add_admin_items
-          puts "\nSelling Bill Amount:- #{$sellamount}".light_yellow
+          
+          p_name = sell[:p_name]
+          p_price = sell[:p_price]
+          p_qty = sell[:p_qty]
+          sold_product_add_admin_items(p_name, p_price, p_qty)
+
+          puts "\nCurrent Selling Bill:- #{sell_bill}".light_yellow
+          puts "Total Selling Bill Amount:- #{$sellamount}".light_yellow
           puts 'Sold Product Successfully!!!'.light_blue
-          case $user_role
-          when 'admin'
-            AdminPanel.new.salesman_panel
-          when 'salesman'
-            saler_options
-          end
+          next_step
         end 
       end
 
@@ -168,7 +164,7 @@ class SalesmanPanel
       end
     else
       puts 'Sorry, No products available!! Please add firstly..'
-      saler_options
+      next_step
     end
   end
 
@@ -181,35 +177,38 @@ class SalesmanPanel
   def sold_product_list
     if $sold_id != 0
       puts "\n|| LIST OF SOLD PRODUCTS ||"
-      puts '---------------------------'
-      puts "\n Sold_id\tSold_P_id\tSold_P_Name\tSold_P_Price\tLeft_Qty\tSold_P_Qty \n"
-      $sold_products.each do |sell|
-        print " \s#{sell[:sold_id]}\t\t"
-        print " #{sell[:sold_p_id]}\t\t"
-        print "#{sell[:sold_p_name]}\t\t"
-        print "#{sell[:sold_p_price]}\t\t"
-        print "#{sell[:left_qty]}\t\t"
-        print "#{sell[:sold_p_qty]}"
-        puts "\n"
+      puts "---------------------------\n"
+      table = Terminal::Table.new do |t|
+        t.headings = ['Sold_id', 'Sold_P_id', 'Sold_P_Name', 'Sold_P_Price', 'Left_Qty', 'Sold_P_Qty']
+        t.rows = $sold_products.map { |sold| sold.values}
+        t.style = { :alignment => :center }
       end
+      puts table
 
     else
       puts 'Sorry, No product sold yet!!! Sell something firstly...'
+      next_step
     end
   end
 
-  def sold_product_add_admin_items
-    $sold_products.each do |sell|
-      if $products.any? { |product| product[:p_name] != sell[:sold_p_name]}
-        $p_id += 1
-        $products.push ({
-            p_id: $p_id,
-            p_name: sell[:sold_p_name],
-            p_price: sell[:sold_p_price],
-            p_qty: sell[:sold_p_qty]
-            })
-      end
+  def sold_product_add_admin_items(p_name, p_price, p_qty)
+    if $products.any? {|product| product[:p_name] != p_name && product[:p_qty] != p_qty}
+      $p_id += 1
+      $products.push ({
+          p_id: $p_id,
+          p_name: p_name,
+          p_price: p_price,
+          p_qty: p_qty
+          })
     end
-    # byebug
+  end 
+
+  def next_step
+    case $user_role
+    when 'admin'
+      AdminPanel.new.salesman_panel
+    when 'salesman'
+      saler_options
+    end
   end
 end

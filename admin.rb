@@ -2,7 +2,6 @@ require "byebug"
 require_relative "cm.rb"
 
 class AdminPanel
-
   def admin_panel
     puts "\n\t\t\t\t ************************************** "
     puts "\t\t\t\t\t || ADMIN PANEL || ".blue.on_light_white.bold
@@ -55,6 +54,7 @@ class AdminPanel
     case admin_opt
     when 1
       Users.new.users_exist
+      admin_options
     when 2
       shopper_panel
     when 3
@@ -93,7 +93,7 @@ class AdminPanel
     when 4
       ShopperPanel.new.remove_items
     when 5
-      puts "Total Selling Amount by Shooper :- #{$total}\n".light_green.bold
+      puts "Total Selling Amount by Shopper :- #{$total}\n".light_green.bold
       shopper_panel
     when 6
       admin_options
@@ -109,7 +109,7 @@ class AdminPanel
     puts "-------------\n"
 
     puts 'Admin Options:-'
-    puts " 1. List of Available of Products \n2. Select Product to Purchase \n 3. List of Purchased Products \n 4. Return Product \n 5. Total Purchasing Amount \n 6. Back "
+    puts " 1. List of Available of Products \n 2. Select Product to Purchase \n 3. List of Purchased Products \n 4. Return Product \n 5. Total Purchasing Amount \n 6. Back "
     print 'Choose option: '
     admin_opt = gets.chomp.to_i
     case admin_opt
@@ -119,9 +119,10 @@ class AdminPanel
     when 2
       CustomerPanel.new.select_items
     when 3
-      CustomerPanel.new.sell_product
+      CustomerPanel.new.buy_list
+      customer_panel
     when 4
-      CustomerPanel.new.sold_product_list
+      CustomerPanel.new.return_product
       customer_panel
     when 5
       puts "Total Purchasing Amount by Customer :- #{$total}\n".light_green.bold
@@ -164,5 +165,4 @@ class AdminPanel
       salesman_panel
     end
   end
-  
 end

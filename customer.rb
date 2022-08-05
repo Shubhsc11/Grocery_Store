@@ -2,15 +2,12 @@ require "byebug"
 require_relative "cm.rb"
 
 class CustomerPanel
-
 	def buyer_panel
 		puts "\n\t\t\t\t ************************************** "
   	puts "\t\t\t\t\t|| CUSTOMER/BUYER PANEL || ".light_green.bold
     puts "\t\t\t\t ************************************** "
-
     puts "\nCustomer Options:-"
     puts " 1. SignUp \n 2. Login \n 3. Back \n 4. Exit "
-
     print 'Select option: '
     buyer_choice = gets.chomp.to_i
     case buyer_choice
@@ -29,12 +26,10 @@ class CustomerPanel
     end
   end
 
-
   def customer_options
     puts "\n-------------------------------------"
     puts "\t Customer Options ".light_yellow.bold
     puts "-------------------------------------\n"
-
     puts "\n 1. Available Products \n 2. Select Product to Purchase \n 3. List of Purchased Products \n 4. Return Product \n 5. Logout \n 6. Back \n 7. Exit " 
     print 'Select option: '
     cust_opt = gets.chomp.to_i
@@ -63,21 +58,17 @@ class CustomerPanel
 
   def p_list
     if $p_id != 0 
-      puts "LIST OF PRODUCTS:-\n"
-      puts " P_id\t\tP_Name\t\tP_Price\t\tP_Qty \n"
-      $products.each do |key|
-        print " #{key[:p_id]}\t\t"
-        print "#{key[:p_name]}\t\t"
-        print "#{key[:p_price]}\t\t"
-        print "#{key[:p_qty]}"
-        puts "\n"
+      table = Terminal::Table.new title: 'LIST OF PRODUCTS'.bold do |t|
+        t.headings = ['P_id', 'P_Name', 'P_Price', 'P_Qty']
+        t.rows = $products.map { |product| product.values}
+        t.style = { :alignment => :center }
       end
+      puts table
     else
       puts 'Sorry, No products available!!!'
       customer_options
     end
   end
-
   
   $total = 0
   $purchase = []
@@ -93,44 +84,37 @@ class CustomerPanel
 
       buy_product = ''
       buy_p_p = 0
-
-      $products.each do |key|
-        if buy_id == key[:p_id]
-          if key[:p_qty]-need_qty >= 0
-            key[:p_qty] -= need_qty
+      $products.each do |product|
+        if buy_id == product[:p_id]
+          if product[:p_qty]-need_qty >= 0
+            product[:p_qty] -= need_qty
 
             $b_id += 1
             $purchase.push({
               b_id: $b_id,
-              buy_p_id: key[:p_id],
-              buy_p_name: key[:p_name],
-              buy_p_price: key[:p_price],
+              buy_p_id: product[:p_id],
+              buy_p_name: product[:p_name],
+              buy_p_price: product[:p_price],
               buy_qty: need_qty
             })
-
           else
-            puts "Sorry, Need_Qty #{need_qty} not available. Product quantity is only #{key[:p_qty]}. Please Try Again!"
+            puts "Sorry, Need_Qty #{need_qty} not available. Product quantity is only #{product[:p_qty]}. Please Try Again!"
             select_items
           end
 
-          print "\n=> Your Older Bill Amount: #{$total}\n\n".light_green.bold
           puts '**Ok, Product Selected.**'.light_blue
-          puts "\n=> Your Latest Bill:-\n".light_green.bold
-          bill = key[:p_price] * need_qty
+          puts "\n=> Your Purchasing Bill:-\n".light_green.bold
+          bill = product[:p_price] * need_qty
+          byebug
           $total += bill
 
           if $total != 0
-            puts " P_id\t\tP_Name\t\tP_Price\t\tBuy_Qty \n"
-            print " #{key[:p_id]}\t\t"
-            print "#{key[:p_name]}\t\t"
-            print "#{key[:p_price]}\t\t"
-            print "#{need_qty}"
-            puts "\n"
+            print "\n=> Your Older Bill Amount: #{$total}\n".light_green.bold
+            buy_list
           end
           
           print "\n=> Current Bill: #{bill}\n\n".light_green.bold
-          print "=> Your Total Bill: #{$total}\n\n".light_green.bold
-          
+          print "=> Your Total Bill: #{$total}\n\n".light_green.bold   
           print 'Do you want to select more items(y/n): '
           item_choice = gets.chomp.to_s
           if item_choice.downcase == 'y'
@@ -139,12 +123,7 @@ class CustomerPanel
 
           elsif item_choice.downcase == 'n'
             puts '**Thank You!!! Come again to Purchase.**'.yellow.bold
-            case $user_role
-            when 'admin'
-              AdminPanel.new.customer_panel
-            when 'customer'
-              customer_options
-            end
+            next_step
 
           else
             puts 'You entered something wrong. Please enter (y/n)!!!'
@@ -160,30 +139,24 @@ class CustomerPanel
 
     else
       puts 'Sorry, No products available in the product list!!!'
-      customer_options
+      next_step
     end
   end
-
 
   def buy_list
     if $b_id != 0
-      puts "\nPurchased Items List:-".bold
-      puts "\n Buy_id\t\tP_id\t\tP_Name\t\tP_Price\t\tPurchased_Qty \n"
-      $purchase.each do |b|
-        print " #{b[:b_id]}\t\t"
-        print "#{b[:buy_p_id]}\t\t"
-        print "#{b[:buy_p_name]}\t\t"
-        print "#{b[:buy_p_price]}\t\t"
-        print "#{b[:buy_qty]}"
-        puts "\n"
+      table = Terminal::Table.new title: 'PURCHASED ITEMS LIST'.bold do |t|
+        t.headings = ['Buy_id', 'P_id', 'P_Name', 'P_Price', 'Buy_Qty']
+        t.rows = $purchase.map { |buy| buy.values}
+        t.style = { :alignment => :center }
       end
-      puts "\nYour bill amount:- #{$total}\n\n".light_green.bold
+      puts table
+
     else
       puts 'Sorry, No product purchased yet!!! Please purchase firstly...'
-      customer_options
+      next_step
     end
   end
-
 
   def return_product
     if $b_id != 0
@@ -197,19 +170,13 @@ class CustomerPanel
         if b[:buy_p_id] == return_id && (1..b[:buy_qty]).to_a.include?(return_qty) 
           print "\n=> Your Older Bill Amount: #{$total}\n\n".light_green.bold
           puts '**Ok, Product Returned.**'.light_blue
-          puts "\n=> Your Latest Bill:-\n".light_green.bold
+          puts "\n=> Your Latest Bill:-".light_green.bold
           new_bill = b[:buy_p_price] * return_qty
           $total -= new_bill
           b[:buy_qty] -= return_qty
           find_product(return_id, return_qty)
-
-          print "\nAfter returning the #{return_qty} qty. of #{b[:buy_p_name]}, Your Total Bill: #{$total}\n\n".light_green.bold
-          case $user_role
-          when 'admin'
-            AdminPanel.new.customer_panel
-          when 'customer'
-            customer_options
-          end
+          print "\nAfter returning the #{return_qty} qty. of #{b[:buy_p_name]}, Your Total Bill: #{$total}\n".light_green.bold
+          next_step
         end
       end
         
@@ -219,7 +186,7 @@ class CustomerPanel
       end
     else
       puts 'Sorry, No product purchased yet!!! Please purchase firstly...'
-      customer_options
+      next_step
     end
   end
 
@@ -228,6 +195,15 @@ class CustomerPanel
       if product[:p_id] == return_id
         product[:p_qty] += return_qty
       end
+    end
+  end
+
+  def next_step
+    case $user_role
+    when 'admin'
+      AdminPanel.new.customer_panel
+    when 'customer'
+      customer_options
     end
   end
 
