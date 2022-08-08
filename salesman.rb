@@ -146,7 +146,7 @@ class SalesmanPanel
 
           sold_product_list
           
-          sold_product_add_admin_items(p_name, p_price, p_qty)
+          sold_product_add_admin_items(sell[:p_name], sell[:p_price], sell[:p_qty])
 
           puts "\nCurrent Selling Bill:- #{sell_bill}".light_yellow
           puts "Total Selling Bill Amount:- #{$sellamount}".light_yellow
