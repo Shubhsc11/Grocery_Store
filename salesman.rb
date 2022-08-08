@@ -146,9 +146,6 @@ class SalesmanPanel
 
           sold_product_list
           
-          p_name = sell[:p_name]
-          p_price = sell[:p_price]
-          p_qty = sell[:p_qty]
           sold_product_add_admin_items(p_name, p_price, p_qty)
 
           puts "\nCurrent Selling Bill:- #{sell_bill}".light_yellow
